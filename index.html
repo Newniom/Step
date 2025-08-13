@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instagram Explore Zoom 16:9 Full Width</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:sans-serif;
+  background:#FCF9EA;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  min-height:100vh;
+  padding:20px;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* Loader */
+#loader{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:#FCF9EA;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+.spinner{
+  width:40px;height:40px;
+  border:3px solid #d4a373;
+  border-top:3px solid transparent;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Grid */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:12px;
+  width:100%;
+  max-width:1000px;
+  perspective:1000px;
+}
+.grid img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:16px;
+  cursor:pointer;
+  filter:blur(8px);
+  transform: scale(0.95);
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.grid img.loaded{
+  filter:none;
+  transform: scale(1);
+}
+
+/* Overlay بلور */
+#overlay{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  backdrop-filter:blur(10px);
+  background: rgba(0,0,0,0.2);
+  opacity:0;
+  transition: opacity 0.4s ease;
+  z-index:500;
+  pointer-events:none;
+}
+
+/* Active Zoom */
+.zoomed{
+  position:fixed;
+  z-index:1000;
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+  border-radius:12px;
+  object-fit:contain;
+  transform-origin:center center;
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="spinner"></div>
+</div>
+
+<div id="overlay"></div>
+
+<div class="grid" id="imageGrid">
+  <img src="https://biaupload.com/do.php?imgf=org-9a4b9ac387fe4.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-ad5ceb749adc3.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-2c1f4827a1c82.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-54c9a3f40b651.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-ed8580c877641.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-3669b7c83d802.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-528191251e583.jpg" alt="">
+  <img src="https://biaupload.com/do.php?imgf=org-7fed7129a1054.jpg" alt="">
+</div>
+
+<script>
+const loader = document.getElementById('loader');
+const overlay = document.getElementById('overlay');
+const images = document.querySelectorAll('#imageGrid img');
+
+setTimeout(()=>loader.style.display='none',5000);
+
+let isZoomed=false;
+let activeClone=null;
+
+images.forEach(img=>{
+  img.onload = ()=> img.classList.add('loaded');
+
+  img.addEventListener('click',()=>{
+    if(isZoomed) return;
+    isZoomed = true;
+
+    const rect = img.getBoundingClientRect();
+    const clone = img.cloneNode();
+    activeClone = clone;
+    document.body.appendChild(clone);
+    clone.classList.add('zoomed');
+
+    // شروع از جای تصویر اصلی
+    clone.style.top = rect.top + 'px';
+    clone.style.left = rect.left + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.transform = 'translate(0,0)';
+
+    images.forEach(i=>{
+      if(i!==img){
+        i.style.transform='scale(0.85)';
+        i.style.filter='blur(6px)';
+      }
+    });
+
+    overlay.style.opacity=1;
+    overlay.style.pointerEvents='auto';
+
+    // اجرای انیمیشن بزرگ شدن و تبدیل به 16:9
+    requestAnimationFrame(() => {
+      clone.style.top = '50%';
+      clone.style.left = '50%';
+      clone.style.width = '95vw';
+      clone.style.height = 'calc(95vw / 16 * 9)';
+      clone.style.transform = 'translate(-50%, -50%)';
+    });
+  });
+});
+
+overlay.addEventListener('click',()=>{
+  if(!isZoomed || !activeClone) return;
+
+  overlay.style.opacity=0;
+  overlay.style.pointerEvents='none';
+
+  images.forEach(i=>{
+    i.style.transform='scale(1)';
+    i.style.filter=i.classList.contains('loaded')?'none':'blur(8px)';
+  });
+
+  activeClone.remove();
+  activeClone=null;
+  isZoomed=false;
+});
+</script>
+
+</body>
+</html>
